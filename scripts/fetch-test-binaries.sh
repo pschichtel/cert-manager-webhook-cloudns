@@ -5,7 +5,7 @@ set -e
 #hack_dir=$(dirname ${BASH_SOURCE})
 #source ${hack_dir}/common.sh
 
-k8s_version=1.14.1
+k8s_version=1.22.1
 goarch=amd64
 goos="unknown"
 
@@ -20,7 +20,7 @@ if [[ "$goos" == "unknown" ]]; then
   exit 1
 fi
 
-tmp_root=./_out
+tmp_root=./.out
 kb_root_dir=$tmp_root/kubebuilder
 
 # Turn colors in this script off by setting the NO_COLOR variable in your
