@@ -1,5 +1,5 @@
-IMAGE_NAME := "ixoncloud/cert-manager-webhook-cloudns"
-IMAGE_TAG := "1.0.3"
+IMAGE_NAME := "mschirrmeister/cert-manager-webhook-cloudns"
+IMAGE_TAG := "1.0.4"
 
 OUT := $(shell pwd)/.out
 
@@ -17,7 +17,7 @@ build:
 .PHONY: rendered-manifest.yaml
 rendered-manifest.yaml:
 	helm template \
-	    --name cert-manager-webhook-cloudns \
-        --set image.repository=$(IMAGE_NAME) \
-        --set image.tag=$(IMAGE_TAG) \
-        deploy/cert-manager-webhook-cloudns > "$(OUT)/rendered-manifest.yaml"
+		--name-template cert-manager-webhook-cloudns \
+		--set image.repository=$(IMAGE_NAME) \
+		--set image.tag=$(IMAGE_TAG) \
+		deploy/cert-manager-webhook-cloudns > "$(OUT)/rendered-manifest.yaml"
