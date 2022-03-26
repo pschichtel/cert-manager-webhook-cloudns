@@ -2,6 +2,10 @@
 
 A Cert-Manager DNS01 provider for ClouDNS.
 
+## Note
+
+This fork has `update-deps` branch merged and a few other changes that it works with recent versions of **Kubernetes** (1.23+) and **cert-manager** (1.7.2) to avoid errors and warnings. The github workflow builds images for `amd64` and `arm64`.
+
 ## Configuration
 
 Cert-Manager expects DNS01 providers to parse configuration from incoming webhook requests.
