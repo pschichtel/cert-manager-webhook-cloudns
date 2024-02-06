@@ -17,7 +17,7 @@
 package main
 
 import (
-	"github.com/jetstack/cert-manager/test/acme/dns"
+	acmetest "github.com/cert-manager/cert-manager/test/acme"
 	"os"
 	"testing"
 )
@@ -35,11 +35,11 @@ func TestRunsSuite(t *testing.T) {
 	// snippet of valid configuration that should be included on the
 	// ChallengeRequest passed as part of the test cases.
 
-	fixture := dns.NewFixture(&clouDNSProviderSolver{},
-		dns.SetResolvedZone(zone),
-		dns.SetAllowAmbientCredentials(false),
-		dns.SetManifestPath(ManifestPath),
-		dns.SetStrict(true),
+	fixture := acmetest.NewFixture(&clouDNSProviderSolver{},
+		acmetest.SetResolvedZone(zone),
+		acmetest.SetAllowAmbientCredentials(false),
+		acmetest.SetManifestPath(ManifestPath),
+		acmetest.SetStrict(true),
 	)
 
 	fixture.RunConformance(t)
