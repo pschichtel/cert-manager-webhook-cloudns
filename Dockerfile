@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.21-alpine AS build
+FROM docker.io/library/golang:1.25-alpine AS build
 
 WORKDIR /workspace
 
@@ -11,7 +11,7 @@ COPY . .
 
 RUN CGO_ENABLED=0 go build -o webhook -ldflags '-w -extldflags "-static"' .
 
-FROM docker.io/library/alpine:3.18
+FROM docker.io/library/alpine:3.23
 
 RUN apk add --no-cache ca-certificates
 
