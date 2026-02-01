@@ -1,10 +1,10 @@
-package internal
+package cloudns
 
 import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -13,7 +13,7 @@ import (
 	"github.com/go-acme/lego/v4/challenge/dns01"
 )
 
-const defaultBaseURL = "https://api.cloudns.net/dns/"
+const DefaultBaseUrl = "https://api.cloudns.net/dns/"
 
 type apiResponse struct {
 	Status            string `json:"status"`
@@ -30,7 +30,7 @@ type Zone struct {
 
 // TXTRecord a TXT record
 type TXTRecord struct {
-	ID       int    `json:"id,string"`
+	ID       int    `json:"Id,string"`
 	Type     string `json:"type"`
 	Host     string `json:"host"`
 	Record   string `json:"record"`
@@ -41,41 +41,37 @@ type TXTRecord struct {
 
 type TXTRecords map[string]TXTRecord
 
-// NewClient creates a ClouDNS client
-func NewClient(authID string, authIDType string, authPassword string) (*Client, error) {
-	if authID == "" {
-		return nil, fmt.Errorf("credentials missing: authID")
-	}
+type CloudnsCredentials struct {
+	Id       string
+	IdType   string
+	Password string
+}
 
-	if authPassword == "" {
-		return nil, fmt.Errorf("credentials missing: authPassword")
-	}
-
-	baseURL, err := url.Parse(defaultBaseURL)
+func NewCloudnsClient(baseUrl string) (*CloudnsClient, error) {
+	parsedBaseUrl, err := url.Parse(baseUrl)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Client{
-		authID:       authID,
-		authIDType:   authIDType,
-		authPassword: authPassword,
-		HTTPClient:   &http.Client{},
-		BaseURL:      baseURL,
-	}, nil
+	client := NewCloudnsClientFromUrl(*parsedBaseUrl)
+	return &client, nil
 }
 
-// Client ClouDNS client
-type Client struct {
-	authIDType   string
-	authID       string
-	authPassword string
-	HTTPClient   *http.Client
-	BaseURL      *url.URL
+func NewCloudnsClientFromUrl(baseUrl url.URL) CloudnsClient {
+	return CloudnsClient{
+		HTTPClient: http.Client{},
+		BaseURL:    baseUrl,
+	}
+}
+
+// CloudnsClient ClouDNS client
+type CloudnsClient struct {
+	HTTPClient http.Client
+	BaseURL    url.URL
 }
 
 // GetZone Get domain name information for a FQDN
-func (c *Client) GetZone(authFQDN string) (*Zone, error) {
+func (c CloudnsClient) GetZone(credentials *CloudnsCredentials, authFQDN string) (*Zone, error) {
 	authZone, err := dns01.FindZoneByFqdn(authFQDN)
 	if err != nil {
 		return nil, err
@@ -83,14 +79,14 @@ func (c *Client) GetZone(authFQDN string) (*Zone, error) {
 
 	authZoneName := dns01.UnFqdn(authZone)
 
-	reqURL := *c.BaseURL
+	reqURL := c.BaseURL
 	reqURL.Path += "get-zone-info.json"
 
 	q := reqURL.Query()
 	q.Add("domain-name", authZoneName)
 	reqURL.RawQuery = q.Encode()
 
-	result, err := c.doRequest(http.MethodGet, &reqURL)
+	result, err := c.doRequest(credentials, http.MethodGet, &reqURL)
 	if err != nil {
 		return nil, err
 	}
@@ -116,10 +112,10 @@ func (c *Client) GetZone(authFQDN string) (*Zone, error) {
 }
 
 // FindTxtRecord return the TXT record a zone ID and a FQDN
-func (c *Client) FindTxtRecord(zoneName, fqdn string) (*TXTRecord, error) {
+func (c CloudnsClient) FindTxtRecord(credentials *CloudnsCredentials, zoneName, fqdn string) (*TXTRecord, error) {
 	host := dns01.UnFqdn(strings.TrimSuffix(dns01.UnFqdn(fqdn), zoneName))
 
-	reqURL := *c.BaseURL
+	reqURL := c.BaseURL
 	reqURL.Path += "records.json"
 
 	q := reqURL.Query()
@@ -128,7 +124,7 @@ func (c *Client) FindTxtRecord(zoneName, fqdn string) (*TXTRecord, error) {
 	q.Add("type", "TXT")
 	reqURL.RawQuery = q.Encode()
 
-	result, err := c.doRequest(http.MethodGet, &reqURL)
+	result, err := c.doRequest(credentials, http.MethodGet, &reqURL)
 	if err != nil {
 		return nil, err
 	}
@@ -153,10 +149,10 @@ func (c *Client) FindTxtRecord(zoneName, fqdn string) (*TXTRecord, error) {
 }
 
 // AddTxtRecord add a TXT record
-func (c *Client) AddTxtRecord(zoneName string, fqdn, value string, ttl int) error {
+func (c CloudnsClient) AddTxtRecord(credentials *CloudnsCredentials, zoneName string, fqdn, value string, ttl int) error {
 	host := dns01.UnFqdn(strings.TrimSuffix(dns01.UnFqdn(fqdn), zoneName))
 
-	reqURL := *c.BaseURL
+	reqURL := c.BaseURL
 	reqURL.Path += "add-record.json"
 
 	q := reqURL.Query()
@@ -167,7 +163,7 @@ func (c *Client) AddTxtRecord(zoneName string, fqdn, value string, ttl int) erro
 	q.Add("record-type", "TXT")
 	reqURL.RawQuery = q.Encode()
 
-	raw, err := c.doRequest(http.MethodPost, &reqURL)
+	raw, err := c.doRequest(credentials, http.MethodPost, &reqURL)
 	if err != nil {
 		return err
 	}
@@ -185,16 +181,16 @@ func (c *Client) AddTxtRecord(zoneName string, fqdn, value string, ttl int) erro
 }
 
 // RemoveTxtRecord remove a TXT record
-func (c *Client) RemoveTxtRecord(recordID int, zoneName string) error {
-	reqURL := *c.BaseURL
+func (c CloudnsClient) RemoveTxtRecord(credentials *CloudnsCredentials, recordID int, zoneName string) error {
+	reqURL := c.BaseURL
 	reqURL.Path += "delete-record.json"
 
 	q := reqURL.Query()
 	q.Add("domain-name", zoneName)
-	q.Add("record-id", strconv.Itoa(recordID))
+	q.Add("record-Id", strconv.Itoa(recordID))
 	reqURL.RawQuery = q.Encode()
 
-	raw, err := c.doRequest(http.MethodPost, &reqURL)
+	raw, err := c.doRequest(credentials, http.MethodPost, &reqURL)
 	if err != nil {
 		return err
 	}
@@ -211,8 +207,8 @@ func (c *Client) RemoveTxtRecord(recordID int, zoneName string) error {
 	return nil
 }
 
-func (c *Client) doRequest(method string, url *url.URL) (json.RawMessage, error) {
-	req, err := c.buildRequest(method, url)
+func (c CloudnsClient) doRequest(credentials *CloudnsCredentials, method string, url *url.URL) (json.RawMessage, error) {
+	req, err := c.buildRequest(credentials, method, url)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +220,7 @@ func (c *Client) doRequest(method string, url *url.URL) (json.RawMessage, error)
 
 	defer resp.Body.Close()
 
-	content, err := ioutil.ReadAll(resp.Body)
+	content, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, errors.New(toUnreadableBodyMessage(req, content))
 	}
@@ -235,10 +231,10 @@ func (c *Client) doRequest(method string, url *url.URL) (json.RawMessage, error)
 	return content, nil
 }
 
-func (c *Client) buildRequest(method string, url *url.URL) (*http.Request, error) {
+func (c CloudnsClient) buildRequest(credentials *CloudnsCredentials, method string, url *url.URL) (*http.Request, error) {
 	q := url.Query()
-	q.Add(c.authIDType, c.authID)
-	q.Add("auth-password", c.authPassword)
+	q.Add(credentials.IdType, credentials.Id)
+	q.Add("auth-password", credentials.Password)
 	url.RawQuery = q.Encode()
 
 	req, err := http.NewRequest(method, url.String(), nil)

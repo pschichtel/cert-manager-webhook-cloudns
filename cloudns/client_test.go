@@ -1,4 +1,4 @@
-package internal
+package cloudns
 
 import (
 	"fmt"
@@ -63,11 +63,15 @@ func TestClientGetZone(t *testing.T) {
 			t.Run(test.desc, func(t *testing.T) {
 				server := httptest.NewServer(handlerMock(http.MethodGet, test.apiResponse))
 
-				client, _ := NewClient("myAuthID", authIDType, "myAuthPassword")
+				credentials := CloudnsCredentials{
+					Id:       "myAuthID",
+					IdType:   authIDType,
+					Password: "myAuthPassword",
+				}
 				mockBaseURL, _ := url.Parse(fmt.Sprintf("%s/", server.URL))
-				client.BaseURL = mockBaseURL
+				client := NewCloudnsClientFromUrl(*mockBaseURL)
 
-				zone, err := client.GetZone(test.authFQDN)
+				zone, err := client.GetZone(&credentials, test.authFQDN)
 
 				if test.expected.error {
 					require.Error(t, err)
@@ -143,11 +147,15 @@ func TestClientFindTxtRecord(t *testing.T) {
 			t.Run(test.desc+" (auth type: "+authIDType+")", func(t *testing.T) {
 				server := httptest.NewServer(handlerMock(http.MethodGet, test.apiResponse))
 
-				client, _ := NewClient("myAuthID", authIDType, "myAuthPassword")
+				credentials := CloudnsCredentials{
+					Id:       "myAuthID",
+					IdType:   authIDType,
+					Password: "myAuthPassword",
+				}
 				mockBaseURL, _ := url.Parse(fmt.Sprintf("%s/", server.URL))
-				client.BaseURL = mockBaseURL
+				client := NewCloudnsClientFromUrl(*mockBaseURL)
 
-				txtRecord, err := client.FindTxtRecord(test.zoneName, test.authFQDN)
+				txtRecord, err := client.FindTxtRecord(&credentials, test.zoneName, test.authFQDN)
 
 				if test.expected.error {
 					require.Error(t, err)
@@ -262,11 +270,15 @@ func TestClientAddTxtRecord(t *testing.T) {
 					handlerMock(http.MethodPost, test.apiResponse).ServeHTTP(rw, req)
 				}))
 
-				client, _ := NewClient("myAuthID", authIDType, "myAuthPassword")
+				credentials := CloudnsCredentials{
+					Id:       "myAuthID",
+					IdType:   authIDType,
+					Password: "myAuthPassword",
+				}
 				mockBaseURL, _ := url.Parse(fmt.Sprintf("%s/", server.URL))
-				client.BaseURL = mockBaseURL
+				client := NewCloudnsClientFromUrl(*mockBaseURL)
 
-				err := client.AddTxtRecord(test.zone.Name, test.authFQDN, test.value, test.ttl)
+				err := client.AddTxtRecord(&credentials, test.zone.Name, test.authFQDN, test.value, test.ttl)
 
 				if test.expected.Error != "" {
 					require.EqualError(t, err, test.expected.Error)

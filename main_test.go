@@ -17,9 +17,10 @@
 package main
 
 import (
-	acmetest "github.com/cert-manager/cert-manager/test/acme"
 	"os"
 	"testing"
+
+	acmetest "github.com/cert-manager/cert-manager/test/acme"
 )
 
 const (
