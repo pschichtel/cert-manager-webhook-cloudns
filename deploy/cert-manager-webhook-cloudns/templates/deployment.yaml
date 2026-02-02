@@ -1,8 +1,9 @@
+{{- $authIdMount := "/authId" }}
+{{- $authPasswordMount := "/authIdPassword" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "cert-manager-webhook-cloudns.fullname" . }}
-  namespace: {{ .Release.Namespace | quote }}
   labels:
     app: {{ include "cert-manager-webhook-cloudns.name" . }}
 spec:
@@ -17,8 +18,13 @@ spec:
     spec:
       serviceAccountName: {{ include "cert-manager-webhook-cloudns.fullname" . }}
       containers:
-        - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        - name: {{ .Chart.Name | quote }}
+          {{- $repo := print .Values.image.registry "/" .Values.image.repository }}
+          {{- if .Values.image.digest }}
+          image: {{ print $repo "@" .Values.image.digest | quote }}
+          {{- else }}
+          image: {{ print $repo ":" (.Values.image.tag | default .Chart.AppVersion) | quote }}
+          {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             - --tls-cert-file=/certs/tls.crt
@@ -31,9 +37,17 @@ spec:
             - name: GROUP_NAME
               value: {{ .Values.groupName | quote }}
             - name: CLOUDNS_AUTH_ID_FILE
-              value: {{.Values.clouDNS.credentialsDir | printf "%s/auth_id" | quote}}
+              {{- if kindIs "map" .Values.clouDNS.authId }}
+              value: {{ print $authIdMount "/" .Values.clouDNS.authId.key |  quote }}
+              {{- else }}
+              value: {{ print $authIdMount "/authId" |  quote }}
+              {{- end }}
             - name: CLOUDNS_AUTH_PASSWORD_FILE
-              value: {{.Values.clouDNS.credentialsDir | printf "%s/auth_password" | quote}}
+              {{- if kindIs "map" .Values.clouDNS.authPassword }}
+              value: {{ print $authPasswordMount "/" .Values.clouDNS.authPassword.key |  quote }}
+              {{- else }}
+              value: {{ print $authPasswordMount "/authPassword" |  quote }}
+              {{- end }}
             - name: CLOUDNS_AUTH_ID_TYPE
               value: {{ .Values.clouDNS.authIdType }}
           ports:
@@ -54,8 +68,11 @@ spec:
             - name: certs
               mountPath: /certs
               readOnly: true
-            - name: creds
-              mountPath: {{.Values.clouDNS.credentialsDir}}
+            - name: authId
+              mountPath: {{ $authIdMount | quote }}
+              readOnly: true
+            - name: authPassword
+              mountPath: {{ $authPasswordMount | quote }}
               readOnly: true
           resources:
 {{ toYaml .Values.resources | indent 12 }}
@@ -63,9 +80,20 @@ spec:
         - name: certs
           secret:
             secretName: {{ include "cert-manager-webhook-cloudns.servingCertificate" . }}
-        - name: creds
+        - name: authId
           secret:
-            secretName: {{ .Values.secretName }}
+            {{- if kindIs "map" .Values.clouDNS.authId }}
+            secretName: {{ .Values.clouDNS.authId.name }}
+            {{- else }}
+            secretName: {{ include "cert-manager-webhook-cloudns.fullname" . }}
+            {{- end }}
+        - name: authPassword
+          secret:
+            {{- if kindIs "map" .Values.clouDNS.authPassword }}
+            secretName: {{ .Values.clouDNS.authPassword.name }}
+            {{- else }}
+            secretName: {{ include "cert-manager-webhook-cloudns.fullname" . }}
+            {{- end }}
     {{- with .Values.nodeSelector }}
       nodeSelector:
 {{ toYaml . | indent 8 }}

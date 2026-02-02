@@ -1,6 +1,8 @@
 name: Docker Image CI
 
-on: [ push, workflow_dispatch ]
+on:
+  workflow_dispatch: {}
+  push: {}
 
 jobs:
   build:
@@ -13,7 +15,7 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Build the Docker image
+    - name: Build the image
       run: |
         tag="${GITHUB_REF##*/}"
         if [ "$tag" = "master" ]
