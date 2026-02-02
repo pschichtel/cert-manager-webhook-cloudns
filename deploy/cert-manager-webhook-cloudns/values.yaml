@@ -1,4 +1,4 @@
-groupName: acme.ixon.cloud
+groupName: cloudns.acme.schich.tel
 
 clouDNS:
     # one of 'auth-id' or 'sub-auth-id'
