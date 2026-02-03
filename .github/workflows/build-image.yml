@@ -4,9 +4,7 @@ on:
   workflow_dispatch: {}
   push:
     branches:
-      - '*'
-    tags:
-      - '*'
+      - '**'
     tags-ignore:
       - cert-manager-webhook-cloudns-*
 
