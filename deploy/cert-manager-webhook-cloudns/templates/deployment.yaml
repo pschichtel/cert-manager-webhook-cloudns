@@ -68,10 +68,10 @@ spec:
             - name: certs
               mountPath: /certs
               readOnly: true
-            - name: authId
+            - name: auth-id
               mountPath: {{ $authIdMount | quote }}
               readOnly: true
-            - name: authPassword
+            - name: auth-password
               mountPath: {{ $authPasswordMount | quote }}
               readOnly: true
           resources:
@@ -80,14 +80,14 @@ spec:
         - name: certs
           secret:
             secretName: {{ include "cert-manager-webhook-cloudns.servingCertificate" . }}
-        - name: authId
+        - name: auth-id
           secret:
             {{- if kindIs "map" .Values.clouDNS.authId }}
             secretName: {{ .Values.clouDNS.authId.name }}
             {{- else }}
             secretName: {{ include "cert-manager-webhook-cloudns.fullname" . }}
             {{- end }}
-        - name: authPassword
+        - name: auth-password
           secret:
             {{- if kindIs "map" .Values.clouDNS.authPassword }}
             secretName: {{ .Values.clouDNS.authPassword.name }}
