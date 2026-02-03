@@ -23,7 +23,7 @@ import (
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/cmd"
 	"github.com/go-acme/lego/v4/platform/config/env"
-	"github.com/ixoncloud/cert-manager-webhook-cloudns/cloudns"
+	"github.com/pschichtel/cert-manager-webhook-cloudns/cloudns"
 	restclient "k8s.io/client-go/rest"
 )
 

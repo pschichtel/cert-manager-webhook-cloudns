@@ -4,10 +4,6 @@ A Cert-Manager DNS01 provider for ClouDNS.
 
 This has been forked from: https://github.com/mschirrmeister/cert-manager-webhook-cloudns
 
-## Note
-
-This fork has `update-deps` branch merged and a few other changes that it works with recent versions of **Kubernetes** (1.23+) and **cert-manager** (1.7.2) to avoid errors and warnings. The github workflow builds images for `amd64` and `arm64`.
-
 ## Configuration
 
 Cert-Manager expects DNS01 providers to parse configuration from incoming webhook requests.
@@ -20,13 +16,16 @@ The `testdata/config.json` file is there because the DNS01 provider conformance 
 
 ### Environment Options
 
-|Name|Required|Description|
-|---|---|---|
-|`GROUP_NAME`|yes|Used to organise cert-manager providers, this is usually a domain|
-|`CLOUDNS_AUTH_ID_FILE`|yes|Path to file which contains ClouDNS Auth ID|
-|`CLOUDNS_AUTH_PASSWORD_FILE`|yes|Path to file which contains ClouDNS Auth password|
-|`CLOUDNS_TTL`|no, default: 60|ClouDNS TTL|
-|`CLOUDNS_HTTP_TIMEOUT`|no, default: 30 seconds|ClouDNS API request timeout|
+| Name                         | Required                | Description                                                       |
+|------------------------------|-------------------------|-------------------------------------------------------------------|
+| `GROUP_NAME`                 | yes                     | Used to organise cert-manager providers, this is usually a domain |
+| `CLOUDNS_AUTH_ID_FILE`       | yes                     | Path to file which contains ClouDNS Auth ID                       |
+| `CLOUDNS_AUTH_PASSWORD_FILE` | yes                     | Path to file which contains ClouDNS Auth password                 |
+| `CLOUDNS_TTL`                | no, default: 60         | ClouDNS TTL                                                       |
+| `CLOUDNS_HTTP_TIMEOUT`       | no, default: 30 seconds | ClouDNS API request timeout                                       |
+
+The files referred to by the *_FILE env vars will be read for each request, so changes to them will be picked up
+immediately!
 
 ## Development
 
