@@ -4,21 +4,27 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "cert-manager-webhook-cloudns.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     app: {{ include "cert-manager-webhook-cloudns.name" . }}
+    chart: {{ include "cert-manager-webhook-cloudns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: {{ include "cert-manager-webhook-cloudns.name" . }}
+      release: {{ .Release.Name }}
   template:
     metadata:
       labels:
         app: {{ include "cert-manager-webhook-cloudns.name" . }}
+        release: {{ .Release.Name }}
     spec:
       serviceAccountName: {{ include "cert-manager-webhook-cloudns.fullname" . }}
       containers:
-        - name: {{ .Chart.Name | quote }}
+        - name: {{ .Chart.Name }}
           {{- $repo := print .Values.image.registry "/" .Values.image.repository }}
           {{- if .Values.image.digest }}
           image: {{ print $repo "@" .Values.image.digest | quote }}
@@ -27,13 +33,9 @@ spec:
           {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
-            - --tls-cert-file=/certs/tls.crt
-            - --tls-private-key-file=/certs/tls.key
+            - --tls-cert-file=/tls/tls.crt
+            - --tls-private-key-file=/tls/tls.key
           env:
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
             - name: GROUP_NAME
               value: {{ .Values.groupName | quote }}
             - name: CLOUDNS_AUTH_ID_FILE
@@ -66,14 +68,13 @@ spec:
               port: https
           volumeMounts:
             - name: certs
-              mountPath: /certs
+              mountPath: /tls
               readOnly: true
             - name: auth-id
               mountPath: {{ $authIdMount | quote }}
               readOnly: true
             - name: auth-password
               mountPath: {{ $authPasswordMount | quote }}
-              readOnly: true
           resources:
 {{ toYaml .Values.resources | indent 12 }}
       volumes:

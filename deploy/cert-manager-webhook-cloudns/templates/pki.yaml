@@ -8,48 +8,69 @@ metadata:
   namespace: {{ .Release.Namespace | quote }}
   labels:
     app: {{ include "cert-manager-webhook-cloudns.name" . }}
+    chart: {{ include "cert-manager-webhook-cloudns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 spec:
   selfSigned: {}
+
 ---
+
 # Generate a CA Certificate used to sign certificates for the webhook
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ include "cert-manager-webhook-cloudns.rootCACertificate" . }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     app: {{ include "cert-manager-webhook-cloudns.name" . }}
+    chart: {{ include "cert-manager-webhook-cloudns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 spec:
   secretName: {{ include "cert-manager-webhook-cloudns.rootCACertificate" . }}
-  duration: 43800h0m0s # 5y
+  duration: 43800h # 5y
   issuerRef:
     name: {{ include "cert-manager-webhook-cloudns.selfSignedIssuer" . }}
   commonName: "ca.cert-manager-webhook-cloudns.cert-manager"
   isCA: true
+
 ---
+
 # Create an Issuer that uses the above generated CA certificate to issue certs
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
   name: {{ include "cert-manager-webhook-cloudns.rootCAIssuer" . }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     app: {{ include "cert-manager-webhook-cloudns.name" . }}
+    chart: {{ include "cert-manager-webhook-cloudns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 spec:
   ca:
     secretName: {{ include "cert-manager-webhook-cloudns.rootCACertificate" . }}
+
 ---
+
 # Finally, generate a serving certificate for the webhook to use
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: {{ include "cert-manager-webhook-cloudns.servingCertificate" . }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     app: {{ include "cert-manager-webhook-cloudns.name" . }}
+    chart: {{ include "cert-manager-webhook-cloudns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 spec:
   secretName: {{ include "cert-manager-webhook-cloudns.servingCertificate" . }}
-  duration: 8760h0m0s # 1y
+  duration: 8760h # 1y
   issuerRef:
     name: {{ include "cert-manager-webhook-cloudns.rootCAIssuer" . }}
   dnsNames:
-  - {{ include "cert-manager-webhook-cloudns.fullname" . }}
-  - {{ include "cert-manager-webhook-cloudns.fullname" . }}.{{ .Release.Namespace }}
-  - {{ include "cert-manager-webhook-cloudns.fullname" . }}.{{ .Release.Namespace }}.svc
+    - {{ include "cert-manager-webhook-cloudns.fullname" . }}
+    - {{ include "cert-manager-webhook-cloudns.fullname" . }}.{{ .Release.Namespace }}
+    - {{ include "cert-manager-webhook-cloudns.fullname" . }}.{{ .Release.Namespace }}.svc

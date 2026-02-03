@@ -2,8 +2,12 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: {{ include "cert-manager-webhook-cloudns.fullname" . }}
+  namespace: {{ .Release.Namespace | quote }}
   labels:
     app: {{ include "cert-manager-webhook-cloudns.name" . }}
+    chart: {{ include "cert-manager-webhook-cloudns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 ---
 # Grant the webhook permission to read the ConfigMap containing the Kubernetes
 # apiserver's requestheader-ca-certificate.
@@ -15,6 +19,9 @@ metadata:
   namespace: kube-system
   labels:
     app: {{ include "cert-manager-webhook-cloudns.name" . }}
+    chart: {{ include "cert-manager-webhook-cloudns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -33,6 +40,9 @@ metadata:
   name: {{ include "cert-manager-webhook-cloudns.fullname" . }}:auth-delegator
   labels:
     app: {{ include "cert-manager-webhook-cloudns.name" . }}
+    chart: {{ include "cert-manager-webhook-cloudns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -50,6 +60,9 @@ metadata:
   name: {{ include "cert-manager-webhook-cloudns.fullname" . }}:domain-solver
   labels:
     app: {{ include "cert-manager-webhook-cloudns.name" . }}
+    chart: {{ include "cert-manager-webhook-cloudns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 rules:
   - apiGroups:
       - {{ .Values.groupName }}
@@ -64,6 +77,9 @@ metadata:
   name: {{ include "cert-manager-webhook-cloudns.fullname" . }}:domain-solver
   labels:
     app: {{ include "cert-manager-webhook-cloudns.name" . }}
+    chart: {{ include "cert-manager-webhook-cloudns.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -73,42 +89,3 @@ subjects:
     kind: ServiceAccount
     name: {{ .Values.certManager.serviceAccountName }}
     namespace: {{ .Values.certManager.namespace }}
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: {{ include "cert-manager-webhook-cloudns.fullname" . }}:flowcontrol-solver
-  labels:
-    app: {{ include "cert-manager-webhook-cloudns.name" . }}
-    chart: {{ include "cert-manager-webhook-cloudns.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-rules:
-  - apiGroups:
-      - "flowcontrol.apiserver.k8s.io"
-    resources:
-      - 'prioritylevelconfigurations'
-      - 'flowschemas'
-    verbs:
-      - 'list'
-      - 'watch'
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: {{ include "cert-manager-webhook-cloudns.fullname" . }}:flowcontrol-solver
-  labels:
-    app: {{ include "cert-manager-webhook-cloudns.name" . }}
-    chart: {{ include "cert-manager-webhook-cloudns.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: {{ include "cert-manager-webhook-cloudns.fullname" . }}:flowcontrol-solver
-subjects:
-  - apiGroup: ""
-    kind: ServiceAccount
-    name: {{ include "cert-manager-webhook-cloudns.fullname" . }}
-    namespace: {{ .Release.Namespace | quote }}
----
