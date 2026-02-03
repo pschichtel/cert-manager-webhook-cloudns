@@ -2,7 +2,11 @@ name: Build Image
 
 on:
   workflow_dispatch: {}
-  push: {}
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - cert-manager-webhook-cloudns-*
 
 jobs:
   build:
