@@ -1,8 +1,10 @@
-name: Docker Image CI
+name: Build Image
 
 on:
   workflow_dispatch: {}
-  push: {}
+  push:
+    tags-ignore:
+      - cert-manager-webhook-cloudns-*
 
 jobs:
   build:
