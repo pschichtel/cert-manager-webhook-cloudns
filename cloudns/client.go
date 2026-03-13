@@ -30,7 +30,7 @@ type Zone struct {
 
 // TXTRecord a TXT record
 type TXTRecord struct {
-	ID       int    `json:"Id,string"`
+	ID       int    `json:"id,string"`
 	Type     string `json:"type"`
 	Host     string `json:"host"`
 	Record   string `json:"record"`
@@ -174,7 +174,7 @@ func (c CloudnsClient) AddTxtRecord(credentials *CloudnsCredentials, zoneName st
 	}
 
 	if resp.Status != "Success" {
-		return fmt.Errorf("fail to add TXT record: %s %s", resp.Status, resp.StatusDescription)
+		return fmt.Errorf("failed to add TXT record: %s %s", resp.Status, resp.StatusDescription)
 	}
 
 	return nil
@@ -187,7 +187,7 @@ func (c CloudnsClient) RemoveTxtRecord(credentials *CloudnsCredentials, recordID
 
 	q := reqURL.Query()
 	q.Add("domain-name", zoneName)
-	q.Add("record-Id", strconv.Itoa(recordID))
+	q.Add("record-id", strconv.Itoa(recordID))
 	reqURL.RawQuery = q.Encode()
 
 	raw, err := c.doRequest(credentials, http.MethodPost, &reqURL)
@@ -201,7 +201,7 @@ func (c CloudnsClient) RemoveTxtRecord(credentials *CloudnsCredentials, recordID
 	}
 
 	if resp.Status != "Success" {
-		return fmt.Errorf("fail to add TXT record: %s %s", resp.Status, resp.StatusDescription)
+		return fmt.Errorf("failed to remove TXT record: %s %s", resp.Status, resp.StatusDescription)
 	}
 
 	return nil
