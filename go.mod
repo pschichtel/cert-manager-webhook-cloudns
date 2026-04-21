@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/cert-manager/cert-manager v1.20.2
-	github.com/go-acme/lego/v4 v4.34.0
+	github.com/go-acme/lego/v4 v4.35.1
 	github.com/stretchr/testify v1.11.1
 	k8s.io/client-go v0.35.4
 )
